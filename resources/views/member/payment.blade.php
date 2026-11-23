@@ -214,7 +214,7 @@
                 <h3>Scan QRIS to Pay</h3>
 
                 @if($setting && $setting->is_active && $setting->qris_image)
-                    <img src="{{ asset('storage/' . $setting->qris_image) }}" alt="FORMLAB QRIS">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($setting->qris_image) }}" alt="FORMLAB QRIS">
                 @else
                     <div class="qris-placeholder">
                         QRIS is currently unavailable.
