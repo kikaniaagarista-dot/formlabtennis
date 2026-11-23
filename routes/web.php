@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\AuthController;
 use App\Models\Booking;
 use App\Models\TennisClass;
@@ -80,6 +81,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/bookings/{booking}/payment', [MemberBookingController::class, 'payment'])
         ->name('member.booking.payment');
 
+    Route::get('/bookings/{booking}/download-qris', function (Booking $booking) {
+
+        abort_unless($booking->user_id === auth()->id(), 403);
+
+        $setting = \App\Models\PaymentSetting::first();
+
+        abort_unless($setting && $setting->is_active && $setting->qris_image, 404);
+
+        abort_unless(
+            Storage::disk('public')->exists($setting->qris_image),
+            404
+        );
+
+        return Storage::disk('public')->download(
+            $setting->qris_image,
+            'FORMLAB-QRIS.png'
+        );
+
+    })->name('member.booking.download-qris');
     Route::get('/classes/{id}/private', [MemberBookingController::class, 'private'])
         ->name('member.private.create');
 

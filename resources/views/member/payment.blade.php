@@ -18,30 +18,28 @@
         margin: auto;
     }
 
-    .payment-heading {
+    .payment-title {
+        text-align: center;
         margin-bottom: 35px;
     }
 
-    .payment-heading span {
+    .payment-title h1 {
+        font-size: 32px;
+        font-weight: 800;
         color: #b6ff00;
-        font-size: 12px;
-        letter-spacing: 3px;
-        font-weight: 700;
+        margin-bottom: 10px;
     }
 
-    .payment-heading h1 {
-        font-size: 36px;
-        margin: 12px 0;
-    }
-
-    .payment-heading p {
-        color: #929a91;
+    .payment-title p {
+        color: #aaa;
+        font-size: 14px;
     }
 
     .payment-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 25px;
+        align-items: start;
     }
 
     .payment-card {
@@ -52,31 +50,43 @@
     }
 
     .payment-card h3 {
+        color: #b6ff00;
+        font-size: 20px;
         margin-bottom: 22px;
-        font-size: 18px;
     }
 
-    .detail-row {
+    .payment-detail {
         display: flex;
         justify-content: space-between;
         gap: 15px;
-        padding: 14px 0;
-        border-bottom: 1px solid #303630;
+        padding: 13px 0;
+        border-bottom: 1px solid #343834;
         font-size: 14px;
     }
 
-    .detail-row span:first-child {
-        color: #929a91;
+    .payment-detail span:first-child {
+        color: #aaa;
     }
 
-    .detail-row strong {
+    .payment-detail strong {
         text-align: right;
+        overflow-wrap: anywhere;
     }
 
-    .total-row {
-        margin-top: 18px;
+    .payment-total {
+        margin-top: 20px;
+        padding: 17px;
+        background: #292e25;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-weight: 800;
+    }
+
+    .payment-total strong {
         color: #b6ff00;
-        font-size: 19px;
+        text-align: right;
     }
 
     .qris-area {
@@ -84,46 +94,73 @@
     }
 
     .qris-area img {
-        width: 260px;
-        max-width: 100%;
-        background: white;
-        padding: 10px;
+        display: block;
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        margin: 0 auto 20px;
         border-radius: 12px;
-        margin: 10px auto 20px;
+        background: #fff;
+        padding: 10px;
+    }
+
+    .download-qris-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 5px;
+        padding: 13px 25px;
+        background: #b6ff00;
+        color: #111 !important;
+        font-weight: 700;
+        font-size: 15px;
+        text-decoration: none !important;
+        border-radius: 10px;
+        transition: 0.2s ease;
+    }
+
+    .download-qris-btn:hover {
+        background: #d0ff55;
+        transform: translateY(-2px);
     }
 
     .qris-placeholder {
-        padding: 45px 15px;
-        background: #242824;
-        border: 1px dashed #596256;
+        background: #292e25;
+        border: 1px dashed #777;
         border-radius: 12px;
-        color: #929a91;
-        margin: 15px 0;
-    }
-
-    .payment-note {
-        color: #929a91;
-        font-size: 13px;
+        padding: 35px 20px;
+        color: #aaa;
         line-height: 1.7;
     }
 
-    .payment-status {
-        display: inline-block;
-        padding: 8px 14px;
-        border-radius: 30px;
-        background: #3b3218;
-        color: #ffd76a;
-        font-size: 12px;
-        margin-top: 15px;
+    .payment-note {
+        color: #aaa;
+        font-size: 13px;
+        line-height: 1.7;
+        margin-top: 20px;
+        text-align: left;
     }
 
-    @media (max-width: 700px) {
+    .payment-note strong {
+        color: #fff;
+    }
+
+    @media (max-width: 768px) {
+        .payment-page {
+            padding: 35px 15px;
+        }
+
         .payment-grid {
             grid-template-columns: 1fr;
         }
 
-        .payment-heading h1 {
-            font-size: 28px;
+        .payment-title h1 {
+            font-size: 26px;
+        }
+
+        .payment-card {
+            padding: 22px;
         }
     }
 </style>
@@ -131,96 +168,91 @@
 <section class="payment-page">
     <div class="payment-container">
 
-        <div class="payment-heading">
-            <span>FORMLAB TENNIS CLUB</span>
+        <div class="payment-title">
             <h1>Complete Your Payment</h1>
-            <p>Your booking has been created. Please complete your payment below.</p>
+            <p>Please review your booking details and complete your payment.</p>
         </div>
 
         <div class="payment-grid">
 
+            {{-- BOOKING DETAILS --}}
             <div class="payment-card">
                 <h3>Booking Details</h3>
 
-                <div class="detail-row">
+                <div class="payment-detail">
                     <span>Booking ID</span>
                     <strong>#{{ $booking->id }}</strong>
                 </div>
 
-                <div class="detail-row">
+                <div class="payment-detail">
                     <span>Class</span>
                     <strong>{{ $booking->class_name }}</strong>
                 </div>
 
-                <div class="detail-row">
-                    <span>Date</span>
+                <div class="payment-detail">
+                    <span>Booking Date</span>
                     <strong>{{ $booking->booking_date }}</strong>
                 </div>
 
-                <div class="detail-row">
-                    <span>Time</span>
+                <div class="payment-detail">
+                    <span>Booking Time</span>
                     <strong>{{ $booking->booking_time }}</strong>
                 </div>
 
-                <div class="detail-row">
-                    <span>Payment Package</span>
-                    <strong>{{ $booking->membership_package ?? 'Pay Per Meeting' }}</strong>
+                <div class="payment-detail">
+                    <span>Participants</span>
+                    <strong>{{ $booking->participants }}</strong>
                 </div>
 
-
-                <div class="detail-row">
-                    <span>Number of Participants</span>
-                    <strong>{{ $booking->participants }} People</strong>
-                </div>
-
-                <div class="detail-row">
+                <div class="payment-detail">
                     <span>Total Sessions</span>
-                    <strong>{{ $booking->total_sessions }} Sessions</strong>
+                    <strong>{{ $booking->total_sessions }}</strong>
                 </div>
 
-                <div style="padding: 15px 0; border-bottom: 1px solid #303630;">
-                    <p style="color:#929a91; margin-bottom:12px; font-size:14px;">
-                        Selected Training Schedules
-                    </p>
-
-                    @foreach ($booking->schedules as $schedule)
-                        <div style="margin-bottom:12px; font-size:14px;">
-                            <strong>
-                                {{ $schedule->schedule_date->format('d-m-Y') }}
-                            </strong>
-                            <p style="color:#929a91; margin-top:5px;">
-                                {{ substr($schedule->start_time, 0, 5) }}
-                                - {{ substr($schedule->end_time, 0, 5) }} WITA
-                            </p>
-                            <p style="color:#929a91;">
-                                {{ $schedule->location->name ?? '-' }}
-                            </p>
-                        </div>
-                    @endforeach
+                <div class="payment-detail">
+                    <span>Payment Status</span>
+                    <strong>{{ ucfirst($booking->payment_status) }}</strong>
                 </div>
 
-
-                <div class="detail-row total-row">
+                <div class="payment-total">
                     <span>Total Payment</span>
-                    <strong>Rp{{ number_format($booking->total_price, 0, ',', '.') }}</strong>
-                </div>
-
-                <div class="payment-status">
-                    {{ ucfirst($booking->payment_status ?? 'unpaid') }}
+                    <strong>
+                        Rp {{ number_format($booking->total_price, 0, ',', '.') }}
+                    </strong>
                 </div>
             </div>
 
+            {{-- QRIS PAYMENT --}}
             <div class="payment-card qris-area">
                 <h3>Scan QRIS to Pay</h3>
 
                 @if($setting && $setting->is_active && $setting->qris_image)
-                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($setting->qris_image) }}" alt="FORMLAB QRIS">
+
+                    @php
+                        $qrisUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($setting->qris_image);
+                    @endphp
+
+                    <img
+                        src="{{ $qrisUrl }}"
+                        alt="FORMLAB QRIS"
+                    >
+
+                    <a
+                        href="{{ route('member.booking.download-qris', $booking->id) }}"
+                        class="download-qris-btn"
+                    >
+                        <i class="fas fa-download"></i>
+                        Download QRIS
+                    </a>
+
                 @else
+
                     <div class="qris-placeholder">
                         QRIS is currently unavailable.
                         <br>
                         Please contact the administrator.
                     </div>
+
                 @endif
 
                 <p class="payment-note">
@@ -235,7 +267,6 @@
             </div>
 
         </div>
-
     </div>
 </section>
 
