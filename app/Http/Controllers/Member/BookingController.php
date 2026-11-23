@@ -18,7 +18,11 @@ class BookingController extends Controller
         $class = TennisClass::where('is_active', true)->findOrFail($id);
 
         $schedules = ClassSchedule::with('location')
-            ->withSum('bookingsMany as booked_participants', 'participants')
+            ->withSum([
+                'bookingsMany as booked_participants' => function ($query) {
+                    $query->where('bookings.status', '!=', 'cancelled');
+                }
+            ], 'participants')
             ->where('class_id', $class->id)
             ->where('is_available', true)
             ->whereDate('schedule_date', '>=', today())
@@ -111,6 +115,7 @@ class BookingController extends Controller
                 $bookedParticipants = DB::table('booking_schedules')
                     ->join('bookings', 'booking_schedules.booking_id', '=', 'bookings.id')
                     ->where('booking_schedules.schedule_id', $schedule->id)
+                    ->where('bookings.status', '!=', 'cancelled')
                     ->sum('bookings.participants');
 
                 $remainingCapacity = $schedule->capacity - $bookedParticipants;
