@@ -146,6 +146,44 @@
         color: #fff;
     }
 
+    .payment-timer {
+        margin-bottom: 25px;
+        padding: 22px;
+        background: #1b1e1b;
+        border: 1px solid #b6ff00;
+        border-radius: 14px;
+        text-align: center;
+    }
+
+    .payment-timer h3 {
+        color: #b6ff00; ;
+        font-size: 17px;
+        margin-bottom: 8px;
+    }
+
+    .payment-timer p {
+        color: #aaa;
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .timer-countdown {
+        font-size: 38px;
+        font-weight: 800;
+        color: #ffffff;
+        letter-spacing: 3px;
+    }
+
+    .timer-expired {
+        color: #ff6464;
+    }
+
+    @media (max-width: 768px) {
+        .timer-countdown {
+            font-size: 32px;
+        }
+    }
+
     @media (max-width: 768px) {
         .payment-page {
             padding: 35px 15px;
@@ -172,6 +210,18 @@
             <h1>Complete Your Payment</h1>
             <p>Please review your booking details and complete your payment.</p>
         </div>
+
+
+        @if($booking->status === 'pending' && $booking->payment_status === 'unpaid')
+            <div class="payment-timer" id="paymentTimer"
+                data-expiry="{{ $booking->created_at->copy()->addMinutes(15)->toIso8601String() }}">
+
+                <h3>Complete Your Payment Before Time Runs Out</h3>
+                <p>Please complete your payment within 15 minutes.</p>
+
+                <div class="timer-countdown" id="countdown">15:00</div>
+            </div>
+        @endif
 
         <div class="payment-grid">
 
@@ -269,5 +319,45 @@
         </div>
     </div>
 </section>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const timer = document.getElementById('paymentTimer');
+    const countdown = document.getElementById('countdown');
+
+    if (!timer || !countdown) return;
+
+    const expiry = new Date(timer.dataset.expiry).getTime();
+
+    function updateCountdown() {
+        const remaining = Math.max(0, Math.floor((expiry - Date.now()) / 1000));
+
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+
+        countdown.textContent =
+            String(minutes).padStart(2, '0') + ':' +
+            String(seconds).padStart(2, '0');
+
+        if (remaining <= 60) {
+            countdown.classList.add('timer-expired');
+        }
+
+        if (remaining <= 0) {
+            countdown.textContent = 'EXPIRED';
+            clearInterval(interval);
+
+            setTimeout(function () {
+                window.location.reload();
+            }, 1500);
+        }
+    }
+
+    updateCountdown();
+
+    const interval = setInterval(updateCountdown, 1000);
+});
+</script>
 
 @endsection
