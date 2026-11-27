@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\CoachController;
 use App\Http\Controllers\Admin\BookingController;
 use App\Http\Controllers\Member\BookingController as MemberBookingController;
 use App\Http\Controllers\Admin\PaymentSettingController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\TrainingLocationController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\AdminNoteController;
@@ -173,26 +174,8 @@ Route::middleware(['admin'])->group(function () {
         ->except(['show'])
         ->names('admin.coaches');
 
-    Route::get('/admin/payments', function () {
-        $search = request('search');
-        $status = request('status');
-
-        $query = Booking::with('user');
-
-        if ($search) {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            });
-        }
-
-        if ($status) {
-            $query->where('payment_status', $status);
-        }
-
-        $payments = $query->latest()->paginate(10)->withQueryString();
-
-        return view('admin.payments', compact('payments'));
-    });
+    Route::get('/admin/payments', [AdminPaymentController::class, 'index'])
+        ->name('admin.payments.index');
 
     Route::get('/admin/settings', [PaymentSettingController::class, 'edit']);
 
