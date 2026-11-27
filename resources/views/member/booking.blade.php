@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -140,16 +139,20 @@
         <div class="package-info">
             <h2>Choose Payment Package</h2>
 
+            @php
+                $packagePrices = $class->packagePrices();
+            @endphp
+
             <select name="payment_method" id="payment_method" required>
                 <option value="">-- Select Package --</option>
                 <option value="per_meeting" {{ old('payment_method') == 'per_meeting' ? 'selected' : '' }}>
-                    Pay Per Meeting - Rp95.000 (1 Schedule)
+                    Pay Per Meeting - Rp{{ number_format($packagePrices['per_meeting'], 0, ',', '.') }} (1 Schedule)
                 </option>
                 <option value="monthly_4" {{ old('payment_method') == 'monthly_4' ? 'selected' : '' }}>
-                    Monthly Membership - 4 Sessions - Rp360.000
+                    Monthly Membership - 4 Sessions - Rp{{ number_format($packagePrices['monthly_4'], 0, ',', '.') }} (save 6.25%)
                 </option>
                 <option value="monthly_6" {{ old('payment_method') == 'monthly_6' ? 'selected' : '' }}>
-                    Monthly Membership - 6 Sessions - Rp530.000
+                    Monthly Membership - 6 Sessions - Rp{{ number_format($packagePrices['monthly_6'], 0, ',', '.') }} (save 10%)
                 </option>
             </select>
         </div>
@@ -344,11 +347,8 @@
         selectionInfo.textContent =
             `Selected: ${selected} / ${required} schedules | ${participants} participants`;
 
-        const prices = {
-                per_meeting: 95000,
-                monthly_4: 360000,
-                monthly_6: 530000
-            };
+        // Harga diambil dari server (harga kelas yang diatur admin).
+        const prices = @json($packagePrices);
 
             const price = prices[packageSelect.value] || 0;
             const totalPrice = price * participants;

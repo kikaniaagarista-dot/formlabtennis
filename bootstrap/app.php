@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'member' => \App\Http\Middleware\MemberMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
+        
+        // Midtrans tidak punya token CSRF Laravel, jadi alamat webhook dikecualikan.
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notification',
+        ]);
     })
 
     ->withExceptions(function (Exceptions $exceptions): void {

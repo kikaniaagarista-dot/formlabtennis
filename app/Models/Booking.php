@@ -21,8 +21,11 @@ class Booking extends Model
         'used_sessions',
         'participants',
         'schedule_id',
+        'payment_proof',
+        'payment_submitted_at',
+        'payment_verified_at',
+        'payment_rejection_reason',
     ];
-
 
     public function schedule()
     {
@@ -38,9 +41,19 @@ class Booking extends Model
             'schedule_id'
         )->withTimestamps();
     }
-    
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+        public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function latestPaymentTransaction()
+    {
+        return $this->hasOne(PaymentTransaction::class)->latestOfMany();
     }
 }

@@ -1,9 +1,13 @@
-
 @extends('layouts.app')
 
 @section('title', 'Payment')
 
 @section('content')
+
+@php
+    // Mode uji coba: kalau MIDTRANS_ADMIN_ONLY=true, hanya admin yang melihat tombol Pay Now.
+    $midtransVisible = ! config('midtrans.admin_only') || auth()->user()?->role === 'admin';
+@endphp
 
 <style>
     .payment-page {
@@ -178,6 +182,110 @@
         color: #ff6464;
     }
 
+    /* ===== MIDTRANS (GoPay / QRIS otomatis) ===== */
+    .gateway-area {
+        text-align: center;
+    }
+
+    .gateway-methods {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .gateway-methods span {
+        padding: 6px 14px;
+        border: 1px solid #3a403a;
+        border-radius: 999px;
+        font-size: 13px;
+        color: #ddd;
+    }
+
+    .midtrans-pay-btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 15px 25px;
+        background: #b6ff00;
+        color: #111;
+        font-weight: 800;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .midtrans-pay-btn:hover:not(:disabled) {
+        background: #d0ff55;
+        transform: translateY(-2px);
+    }
+
+    .midtrans-pay-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .pay-message {
+        display: none;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.6;
+        text-align: left;
+    }
+
+    .pay-message.info {
+        display: block;
+        background: #292e25;
+        color: #ddd;
+    }
+
+    .pay-message.success {
+        display: block;
+        background: #24331a;
+        color: #b6ff00;
+    }
+
+    .pay-message.error {
+        display: block;
+        background: #3a1f1f;
+        color: #ff8a8a;
+    }
+
+    .pay-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 28px 0 22px;
+        color: #777;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .pay-divider::before,
+    .pay-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #343834;
+    }
+
+    .paid-badge {
+        padding: 22px;
+        background: #24331a;
+        border: 1px solid #b6ff00;
+        border-radius: 12px;
+        color: #b6ff00;
+        font-weight: 700;
+        line-height: 1.7;
+    }
+
     @media (max-width: 768px) {
         .timer-countdown {
             font-size: 32px;
@@ -272,8 +380,51 @@
                 </div>
             </div>
 
-            {{-- QRIS PAYMENT --}}
+            {{-- PAYMENT --}}
             <div class="payment-card qris-area">
+
+                @if($booking->payment_status === 'paid')
+
+                    <div class="paid-badge">
+                        <i class="fas fa-check-circle"></i>
+                        Payment received. Your booking is confirmed.
+                    </div>
+
+                @elseif($midtransVisible && $booking->status === 'pending' && $booking->payment_status === 'unpaid')
+
+                    {{-- MIDTRANS: GoPay / QRIS otomatis --}}
+                    <div class="gateway-area">
+                        <h3>Pay with GoPay or QRIS</h3>
+
+                        <div class="gateway-methods">
+                            <span>GoPay</span>
+                            <span>QRIS</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="payButton"
+                            class="midtrans-pay-btn"
+                            data-url="{{ route('member.booking.snap-token', $booking->id) }}"
+                            data-csrf="{{ csrf_token() }}"
+                        >
+                            <i class="fas fa-wallet"></i>
+                            Pay Now
+                        </button>
+
+                        <div id="payMessage" class="pay-message"></div>
+
+                        <p class="payment-note">
+                            Your payment is verified automatically.
+                            The booking status will update once the payment succeeds.
+                        </p>
+                    </div>
+
+                    <div class="pay-divider">or pay manually</div>
+
+                @endif
+
+                @if($booking->payment_status !== 'paid')
                 <h3>Scan QRIS to Pay</h3>
 
                 @if($setting && $setting->is_active && $setting->qris_image)
@@ -314,6 +465,7 @@
                     Payment Name:
                     <strong>{{ $setting->payment_name ?? 'FORMLAB Tennis' }}</strong>
                 </p>
+                @endif
             </div>
 
         </div>
@@ -359,5 +511,89 @@ document.addEventListener('DOMContentLoaded', function () {
     const interval = setInterval(updateCountdown, 1000);
 });
 </script>
+
+
+{{-- ===== MIDTRANS SNAP ===== --}}
+@if($booking->status === 'pending' && $booking->payment_status === 'unpaid')
+<script
+    src="{{ config('midtrans.is_production')
+        ? 'https://app.midtrans.com/snap/snap.js'
+        : 'https://app.sandbox.midtrans.com/snap/snap.js' }}"
+    data-client-key="{{ config('midtrans.client_key') }}">
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const payButton = document.getElementById('payButton');
+    const payMessage = document.getElementById('payMessage');
+
+    if (!payButton) return;
+
+    const originalLabel = payButton.innerHTML;
+
+    function showMessage(type, text) {
+        payMessage.className = 'pay-message ' + type;
+        payMessage.textContent = text;
+    }
+
+    function resetButton() {
+        payButton.disabled = false;
+        payButton.innerHTML = originalLabel;
+    }
+
+    payButton.addEventListener('click', async function () {
+        payButton.disabled = true;
+        payButton.innerHTML = 'Preparing payment...';
+        showMessage('info', 'Connecting to the payment service...');
+
+        try {
+            // 1. Minta snap token ke Laravel
+            const response = await fetch(payButton.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': payButton.dataset.csrf,
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok || !data.snap_token) {
+                showMessage('error', data.message || 'Payment could not be started. Please try again.');
+                resetButton();
+                return;
+            }
+
+            payMessage.className = 'pay-message';
+
+            // 2. Buka jendela pembayaran Midtrans
+            window.snap.pay(data.snap_token, {
+                onSuccess: function () {
+                    // Status "paid" TIDAK diatur di sini.
+                    // Yang mengubah status hanya webhook dari Midtrans (Tahap 5).
+                    showMessage('success', 'Payment received. Updating your booking...');
+                    setTimeout(() => window.location.reload(), 3000);
+                },
+                onPending: function () {
+                    showMessage('info', 'Waiting for your payment. Complete it in GoPay or your payment app.');
+                    resetButton();
+                },
+                onError: function () {
+                    showMessage('error', 'Payment failed. Please try again.');
+                    resetButton();
+                },
+                onClose: function () {
+                    showMessage('info', 'Payment window closed. Click "Pay Now" to continue.');
+                    resetButton();
+                },
+            });
+        } catch (error) {
+            showMessage('error', 'Connection problem. Please check your internet and try again.');
+            resetButton();
+        }
+    });
+});
+</script>
+@endif
 
 @endsection

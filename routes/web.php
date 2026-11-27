@@ -15,12 +15,15 @@ use App\Http\Controllers\Admin\PaymentSettingController;
 use App\Http\Controllers\Admin\TrainingLocationController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\AdminNoteController;
-
+use App\Http\Controllers\Member\PaymentController as MemberPaymentController;
+use App\Http\Controllers\MidtransNotificationController;
 
 Route::get('/', function () {
     return view('home');
 });
-
+// Webhook Midtrans (dipanggil server Midtrans, bukan oleh member)
+Route::post('/midtrans/notification', MidtransNotificationController::class)
+    ->name('midtrans.notification');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -80,6 +83,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/bookings/{booking}/payment', [MemberBookingController::class, 'payment'])
         ->name('member.booking.payment');
+
+    Route::post('/bookings/{booking}/snap-token', [MemberPaymentController::class, 'createSnapToken'])
+        ->middleware('throttle:10,1')
+        ->name('member.booking.snap-token');
 
     Route::get('/bookings/{booking}/download-qris', function (Booking $booking) {
 

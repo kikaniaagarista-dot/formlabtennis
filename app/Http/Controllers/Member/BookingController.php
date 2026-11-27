@@ -60,21 +60,12 @@ class BookingController extends Controller
             'participants' => 'required|integer|min:1',
         ]);
 
-        $price = 0;
-        $package = null;
-        $sessions = 1;
+        // Harga dihitung dari harga kelas yang diatur admin (lihat TennisClass::packagePrice).
+        $packageConfig = TennisClass::PACKAGES[$validated['payment_method']];
 
-        if ($validated['payment_method'] === 'per_meeting') {
-            $price = 95000;
-        } elseif ($validated['payment_method'] === 'monthly_4') {
-            $price = 360000;
-            $package = 'Monthly Membership 4 Sessions';
-            $sessions = 4;
-        } elseif ($validated['payment_method'] === 'monthly_6') {
-            $price = 530000;
-            $package = 'Monthly Membership 6 Sessions';
-            $sessions = 6;
-        }
+        $price = $class->packagePrice($validated['payment_method']);
+        $sessions = $packageConfig['sessions'];
+        $package = $sessions > 1 ? $packageConfig['label'] : null;
 
         if (count($validated['schedule_ids']) !== $sessions) {
             return back()
